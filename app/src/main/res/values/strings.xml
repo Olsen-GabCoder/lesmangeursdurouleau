@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Les Mangeurs du Rouleau</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="no_readings_available">Aucune lecture pour le moment.</string>
+    <string name="no_synopsis_available">Aucun synopsis disponible.</string>
+    <string name="no_meetings_scheduled">Aucune réunion programmée pour le moment.</string>
+    <string name="fill_all_fields">Veuillez remplir tous les champs</string>
+    <string name="login_successful">Connexion réussie: %1$s</string> <!-- %1$s sera remplacé par l'email -->
+    <string name="login_failed">Erreur de connexion: %1$s</string>
+    <string name="error_field_required">Ce champ est requis</string>
+    <string name="error_password_too_short">Le mot de passe doit contenir au moins 6 caractères</string>
+    <string name="error_passwords_do_not_match">Les mots de passe ne correspondent pas</string>
+    <string name="registration_successful_please_login">Inscription réussie pour %1$s. Veuillez vous connecter.</string>
+    <string name="registration_failed">Erreur d\'inscription: %1$s</string>
+    <string name="error_loading_book_details">Erreur lors du chargement des détails du livre.</string>
+    <string name="email_not_available">Email non disponible</string>
+    <string name="not_logged_in">Non connecté</string>
+    <string name="username_na">N/A</string>
+    <string name="profile_picture_description">Photo de profil</string>
+    <string name="select_picture">Changer la photo</string>
+    <string name="username_label">Pseudo :</string>
+    <string name="username_hint">Entrez votre pseudo</string>
+    <string name="email_label">Email :</string>
+    <string name="save_profile">Enregistrer</string>
+    <string name="logout">Déconnexion</string>
+    <string name="not_connected">Non connecté</string>
+    <string name="na">N/A</string>
+    <string name="username_not_defined">Pseudo non défini</string>
+    <string name="username_not_set">Pseudo non défini</string>
+    <string name="members_title">Membres</string>
+    <string name="no_members_found">Aucun membre trouvé</string>
+    <string name="error_loading_members">Erreur de chargement : %1$s</string>
+    <string name="member_clicked">Membre sélectionné : %1$s</string>
+    <string name="view_members">Voir les membres</string>
+</resources>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/navigation_dashboard">
+
+    <fragment
+        android:id="@+id/navigation_dashboard"
+        android:name="com.lesmangeursdurouleau.app.ui.dashboard.DashboardFragment"
+        android:label="Accueil"
+        tools:layout="@layout/fragment_dashboard" />
+
+    <fragment
+        android:id="@+id/navigation_readings"
+        android:name="com.lesmangeursdurouleau.app.ui.readings.ReadingsFragment"
+        android:label="Lectures"
+        tools:layout="@layout/fragment_readings" >
+        <action
+            android:id="@+id/action_readingsFragment_to_bookDetailFragment"
+            app:destination="@id/bookDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_meetings"
+        android:name="com.lesmangeursdurouleau.app.ui.meetings.MeetingsFragment"
+        android:label="Réunions"
+        tools:layout="@layout/fragment_meetings" />
+
+    <!-- ProfileFragment est maintenant la destination pour l'onglet "Membres" -->
+    <!-- Si tu veux un onglet "Membres" qui mène à MembersFragment et que Profile est accessible autrement, il faudra revoir -->
+    <fragment
+        android:id="@+id/navigation_members_profile"
+    android:name="com.lesmangeursdurouleau.app.ui.members.ProfileFragment"
+    android:label="Profil"
+    tools:layout="@layout/fragment_profile" >
+    <!-- Action pour naviguer de ProfileFragment vers MembersFragment -->
+    <action
+        android:id="@+id/action_profileFragment_to_membersFragment"
+        app:destination="@id/membersFragmentDestination" />
+</fragment>
+
+    <!-- Nouvelle destination pour MembersFragment -->
+<fragment
+android:id="@+id/membersFragmentDestination"
+android:name="com.lesmangeursdurouleau.app.ui.members.MembersFragment"
+android:label="Liste des Membres"
+tools:layout="@layout/fragment_members" />
+
+<fragment
+android:id="@+id/bookDetailFragment"
+android:name="com.lesmangeursdurouleau.app.ui.readings.detail.BookDetailFragment"
+android:label="Détails du Livre"
+tools:layout="@layout/fragment_book_detail">
+<argument
+    android:name="bookId"
+    app:argType="string" />
+<argument
+    android:name="bookTitle"
+    app:argType="string"
+    app:nullable="true"
+    android:defaultValue="Détails" />
+</fragment>
+
+    </navigation>

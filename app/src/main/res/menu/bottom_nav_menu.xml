@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_dashboard"
+        android:icon="@drawable/ic_dashboard"
+    android:title="Accueil" />
+
+    <item
+        android:id="@+id/navigation_readings"
+        android:icon="@drawable/ic_readings"
+    android:title="Lectures" />
+
+    <item
+        android:id="@+id/navigation_meetings"
+        android:icon="@drawable/ic_meetings"
+    android:title="Réunions" />
+
+    <item
+        android:id="@+id/navigation_members"
+        android:icon="@drawable/ic_members"
+    android:title="Membres" />
+
+    <!-- Pour le "Plus" plus tard
+    <item
+        android:id="@+id/navigation_more"
+        android:icon="@drawable/ic_more"
+        android:title="Plus" />
+    -->
+</menu>

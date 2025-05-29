@@ -1,0 +1,73 @@
+[versions]
+agp = "8.7.2" # Tu avais 8.7.2, je le garde
+kotlin = "1.9.24"
+coreKtx = "1.16.0"
+appcompat = "1.7.0"
+material = "1.12.0"
+activityKtx = "1.10.1"
+constraintlayout = "2.2.1"
+fragmentKtx = "1.8.7"
+glide = "4.16.0"
+
+# Firebase
+googleGmsServicesPlugin = "4.4.1" # Note: La version de ce plugin est googleGmsServicesPlugin, pas juste googleGmsServices
+firebaseBom = "33.0.0"
+firebaseStorageKtx = "21.0.2" # Tu avais cette version
+
+# Navigation
+navigation = "2.7.7"
+
+# Test
+junit = "4.13.2"
+junitVersion = "1.2.1" # Pour androidx.test.ext:junit
+espressoCore = "3.6.1"
+activity = "1.10.1" # Doublon avec activityKtx ? activityKtx est généralement préféré. Je le laisse pour l'instant.
+
+# Hilt - AJOUT DE LA VERSION HILT ICI
+hilt = "2.51.1" # Version de Hilt
+# kotlinKapt n'est pas une version mais un plugin, sa version est liée à celle de Kotlin
+
+[libraries]
+# AndroidX Core & UI
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
+
+# Firebase
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
+firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" } # Ajout de version.ref ici
+
+# Navigation
+androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigation" }
+androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigation" }
+
+# Glide
+glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
+
+# Hilt - UTILISATION DE LA VERSION.REF = "hilt"
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" } # Ce sera utilisé par kapt
+
+# Test
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+googleGmsServices = { id = "com.google.gms.google-services", version.ref = "googleGmsServicesPlugin" } # Utilise googleGmsServicesPlugin pour la version
+navigationSafeArgs = { id = "androidx.navigation.safeargs.kotlin", version.ref = "navigation" }
+# Hilt & Kapt Plugins - UTILISATION DE LA VERSION.REF = "hilt" et "kotlin"
+kotlinKapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" } # Kapt utilise la version de Kotlin
+hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" } # Plugin pour le classpath dans build.gradle (projet)
+# L'alias pour dagger.hilt.android.plugin (appliqué dans le module) n'est pas standard,
+# mais si tu veux en créer un, il n'a pas de version propre, il utilise celle de hiltAndroid.
+# On l'appliquera par son ID direct dans le build.gradle du module.
