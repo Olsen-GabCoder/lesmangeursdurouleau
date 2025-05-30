@@ -5,33 +5,37 @@
     android:id="@+id/main_nav_graph"
     app:startDestination="@id/navigation_dashboard">
 
+    <!-- Accueil -->
     <fragment
         android:id="@+id/navigation_dashboard"
         android:name="com.lesmangeursdurouleau.app.ui.dashboard.DashboardFragment"
         android:label="Accueil"
         tools:layout="@layout/fragment_dashboard" />
 
+    <!-- Lectures -->
     <fragment
         android:id="@+id/navigation_readings"
         android:name="com.lesmangeursdurouleau.app.ui.readings.ReadingsFragment"
         android:label="Lectures"
-        tools:layout="@layout/fragment_readings" >
+        tools:layout="@layout/fragment_readings">
         <action
             android:id="@+id/action_readingsFragment_to_bookDetailFragment"
             app:destination="@id/bookDetailFragment" />
     </fragment>
 
+    <!-- Réunions -->
     <fragment
         android:id="@+id/navigation_meetings"
         android:name="com.lesmangeursdurouleau.app.ui.meetings.MeetingsFragment"
         android:label="Réunions"
         tools:layout="@layout/fragment_meetings" />
 
+    <!-- Profil -->
     <fragment
         android:id="@+id/navigation_members_profile"
         android:name="com.lesmangeursdurouleau.app.ui.members.ProfileFragment"
         android:label="Profil"
-        tools:layout="@layout/fragment_profile" >
+        tools:layout="@layout/fragment_profile">
         <action
             android:id="@+id/action_profileFragment_to_membersFragment"
             app:destination="@id/membersFragmentDestination" />
@@ -40,16 +44,18 @@
             app:destination="@id/chatFragmentDestination" />
     </fragment>
 
+    <!-- Liste des Membres -->
     <fragment
         android:id="@+id/membersFragmentDestination"
         android:name="com.lesmangeursdurouleau.app.ui.members.MembersFragment"
         android:label="Liste des Membres"
-        tools:layout="@layout/fragment_members" >
+        tools:layout="@layout/fragment_members">
         <action
             android:id="@+id/action_membersFragment_to_publicProfileFragment"
             app:destination="@id/publicProfileFragmentDestination" />
     </fragment>
 
+    <!-- Détail d'un livre -->
     <fragment
         android:id="@+id/bookDetailFragment"
         android:name="com.lesmangeursdurouleau.app.ui.readings.detail.BookDetailFragment"
@@ -65,6 +71,7 @@
             android:defaultValue="Détails du Livre" />
     </fragment>
 
+    <!-- Profil public -->
     <fragment
         android:id="@+id/publicProfileFragmentDestination"
         android:name="com.lesmangeursdurouleau.app.ui.members.PublicProfileFragment"
@@ -80,10 +87,15 @@
             android:defaultValue="Profil Membre" />
     </fragment>
 
+    <!-- Discussion générale -->
     <fragment
         android:id="@+id/chatFragmentDestination"
         android:name="com.lesmangeursdurouleau.app.ui.chat.ChatFragment"
         android:label="Discussion Générale"
-        tools:layout="@layout/fragment_chat" />
+        tools:layout="@layout/fragment_chat">
+        <action
+            android:id="@+id/action_chatFragment_to_publicProfileFragment"
+            app:destination="@id/publicProfileFragmentDestination" />
+    </fragment>
 
 </navigation>

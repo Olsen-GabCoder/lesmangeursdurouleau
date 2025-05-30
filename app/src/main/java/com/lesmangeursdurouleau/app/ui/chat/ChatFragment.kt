@@ -6,20 +6,21 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-// import android.view.animation.AnimationUtils // Toujours commenté
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController // NOUVEL IMPORT (ou vérifie s'il est déjà là)
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.lesmangeursdurouleau.app.R
-import com.lesmangeursdurouleau.app.data.model.User // NOUVEL IMPORT
+import com.lesmangeursdurouleau.app.data.model.User
 import com.lesmangeursdurouleau.app.databinding.FragmentChatBinding
 import com.lesmangeursdurouleau.app.ui.chat.adapter.ChatAdapter
+import com.lesmangeursdurouleau.app.ui.chat.adapter.OnProfileClickListener // NOUVEL IMPORT
 import com.lesmangeursdurouleau.app.utils.Resource
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class ChatFragment : Fragment() {
+class ChatFragment : Fragment(), OnProfileClickListener { // IMPLÉMENTE L'INTERFACE
 
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
@@ -47,7 +48,7 @@ class ChatFragment : Fragment() {
 
     private fun setupRecyclerView() {
         Log.d("ChatFragment", "setupRecyclerView")
-        chatAdapter = ChatAdapter() // Créer l'instance de l'adapter
+        chatAdapter = ChatAdapter(this) // Passe le fragment (qui implémente OnProfileClickListener)
         binding.rvChatMessages.apply {
             adapter = chatAdapter
             layoutManager = LinearLayoutManager(requireContext()).apply {
@@ -65,7 +66,7 @@ class ChatFragment : Fragment() {
                 viewModel.sendMessage(messageText)
             } else {
                 Log.w("ChatFragment", "Tentative d'envoi d'un message vide.")
-                Toast.makeText(requireContext(), "Le message ne peut pas être vide", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.message_cannot_be_empty, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -73,8 +74,8 @@ class ChatFragment : Fragment() {
     private fun setupObservers() {
         Log.d("ChatFragment", "setupObservers")
 
-        // Observer pour les messages
         viewModel.messages.observe(viewLifecycleOwner) { resource ->
+            // ... (code de l'observateur de messages inchangé) ...
             Log.d("ChatFragment", "Observation des messages: $resource")
             when (resource) {
                 is Resource.Loading -> {
@@ -96,7 +97,9 @@ class ChatFragment : Fragment() {
                             if (itemCount > 0) {
                                 val layoutManager = binding.rvChatMessages.layoutManager as LinearLayoutManager
                                 val lastCompletelyVisibleItemPosition = layoutManager.findLastCompletelyVisibleItemPosition()
-                                if (lastCompletelyVisibleItemPosition == -1 || lastCompletelyVisibleItemPosition >= itemCount - 2 || messages.size <= (layoutManager.childCount ?: 0) +1 ) { // +1 pour être plus agressif sur le scroll au début
+                                val isNearBottom = lastCompletelyVisibleItemPosition == -1 || lastCompletelyVisibleItemPosition >= itemCount - 2 || itemCount <= (layoutManager.childCount ?: 0) + 1
+
+                                if (isNearBottom) {
                                     binding.rvChatMessages.smoothScrollToPosition(itemCount - 1)
                                     Log.d("ChatFragment", "Scroll vers le message ${itemCount - 1}")
                                 }
@@ -113,14 +116,13 @@ class ChatFragment : Fragment() {
             }
         }
 
-        // NOUVEL OBSERVER: Pour les détails des utilisateurs (cache d'avatars/noms)
         viewModel.userDetailsCache.observe(viewLifecycleOwner) { userMap ->
             Log.d("ChatFragment", "Mise à jour du cache des détails utilisateurs: ${userMap.size} utilisateurs en cache.")
-            chatAdapter.setUserDetails(userMap) // Nouvelle méthode à ajouter dans ChatAdapter
+            chatAdapter.setUserDetails(userMap)
         }
 
-        // Observer pour le statut d'envoi de message
         viewModel.sendMessageStatus.observe(viewLifecycleOwner) { resource ->
+            // ... (code de l'observateur de statut d'envoi inchangé) ...
             Log.d("ChatFragment", "Observation statut envoi: $resource")
             binding.btnSendMessage.isEnabled = resource !is Resource.Loading
             binding.etChatMessageInput.isEnabled = resource !is Resource.Loading
@@ -153,6 +155,28 @@ class ChatFragment : Fragment() {
             if (resource != null && resource !is Resource.Loading) {
                 viewModel.clearSendMessageStatus()
             }
+        }
+    }
+
+    // IMPLÉMENTATION DE L'INTERFACE OnProfileClickListener
+    override fun onProfileClicked(userId: String, username: String) {
+        Log.d("ChatFragment", "onProfileClicked: userId=$userId, username=$username")
+        // Naviguer vers PublicProfileFragment
+        // La classe ChatFragmentDirections doit être générée par Safe Args
+        // si l'action existe depuis ChatFragment vers PublicProfileFragment.
+        // S'il n'y a pas d'action directe, on peut utiliser l'ID global de la destination.
+        // Assumons qu'une action est définie :
+        try {
+            val action = ChatFragmentDirections.actionChatFragmentToPublicProfileFragment(
+                userId = userId,
+                username = username // username est utilisé pour le titre de l'AppBar du profil public
+            )
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Log.e("ChatFragment", "Erreur de navigation vers le profil public: ${e.localizedMessage}", e)
+            Toast.makeText(requireContext(), "Impossible d'ouvrir le profil.", Toast.LENGTH_SHORT).show()
+            // Cela peut arriver si l'action n'est pas définie dans le graphe de navigation
+            // ou si ChatFragmentDirections n'est pas généré correctement.
         }
     }
 

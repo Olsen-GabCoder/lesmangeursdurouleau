@@ -38,4 +38,5 @@
     <string name="error_unknown">Une erreur inconnue est survenue.</string>
     <string name="general_chat_button_text">Discussion Générale</string>
     <string name="unknown_user">Utilisateur inconnu</string>
+    <string name="message_cannot_be_empty">Le message ne peut pas être vide</string>
 </resources>

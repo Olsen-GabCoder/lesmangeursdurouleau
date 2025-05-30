@@ -18,48 +18,42 @@ import javax.inject.Inject
 @HiltViewModel
 class PublicProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val savedStateHandle: SavedStateHandle // Pour récupérer les arguments de navigation
+    savedStateHandle: SavedStateHandle // Retiré `private val` si non utilisé ailleurs que dans init
 ) : ViewModel() {
 
     private val _userProfile = MutableLiveData<Resource<User>>()
     val userProfile: LiveData<Resource<User>> = _userProfile
 
-    // Récupérer l'userId des arguments de navigation
-    // La clé "userId" doit correspondre au nom de l'argument défini dans main_nav_graph.xml
-    private val userId: String? = savedStateHandle.get<String>("userId")
+    private val userIdFromArgs: String? = savedStateHandle.get<String>("userId")
 
     init {
-        if (!userId.isNullOrBlank()) {
-            fetchUserProfile(userId)
+        Log.d("PublicProfileViewModel", "ViewModel initialisé. Tentative de récupération de l'userId des arguments.")
+        if (!userIdFromArgs.isNullOrBlank()) {
+            Log.i("PublicProfileViewModel", "UserId reçu des arguments: '$userIdFromArgs'. Lancement de fetchUserProfile.")
+            fetchUserProfile(userIdFromArgs)
         } else {
-            Log.e("PublicProfileViewModel", "User ID est null ou vide dans SavedStateHandle.")
-            _userProfile.value = Resource.Error("Impossible de charger le profil : ID utilisateur manquant.")
+            Log.e("PublicProfileViewModel", "User ID est null ou vide dans SavedStateHandle. Impossible de charger le profil.")
+            _userProfile.value = Resource.Error("ID utilisateur manquant pour charger le profil.")
         }
     }
 
     private fun fetchUserProfile(id: String) {
+        Log.d("PublicProfileViewModel", "fetchUserProfile appelé pour l'ID: '$id'")
         viewModelScope.launch {
             _userProfile.value = Resource.Loading()
             userRepository.getUserById(id)
                 .catch { e ->
-                    Log.e("PublicProfileViewModel", "Exception lors de la récupération du profil pour $id", e)
+                    Log.e("PublicProfileViewModel", "Exception non gérée dans le flow getUserById pour '$id'", e)
                     _userProfile.postValue(Resource.Error("Erreur technique: ${e.localizedMessage}"))
                 }
                 .collectLatest { resource ->
                     _userProfile.value = resource
                     when (resource) {
-                        is Resource.Success -> Log.d("PublicProfileViewModel", "Profil chargé pour $id: ${resource.data?.username}")
-                        is Resource.Error -> Log.e("PublicProfileViewModel", "Erreur chargement profil $id: ${resource.message}")
-                        is Resource.Loading -> Log.d("PublicProfileViewModel", "Chargement du profil pour $id...")
+                        is Resource.Success -> Log.i("PublicProfileViewModel", "Profil chargé avec succès pour ID '$id': ${resource.data?.username}")
+                        is Resource.Error -> Log.e("PublicProfileViewModel", "Erreur lors du chargement du profil pour ID '$id': ${resource.message}")
+                        is Resource.Loading -> Log.d("PublicProfileViewModel", "Chargement du profil pour ID '$id'...")
                     }
                 }
-        }
-    }
-
-    // Si tu veux permettre un rafraîchissement manuel plus tard
-    fun refreshProfile() {
-        if (!userId.isNullOrBlank()) {
-            fetchUserProfile(userId)
         }
     }
 }
