@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Les Mangeurs du Rouleau</string>
     <!-- TODO: Remove or change this placeholder text -->
@@ -33,4 +34,8 @@
     <string name="error_loading_members">Erreur de chargement : %1$s</string>
     <string name="member_clicked">Membre sélectionné : %1$s</string>
     <string name="view_members">Voir les membres</string>
+    <string name="error_loading_user_data">Erreur lors du chargement des données de l\'utilisateur.</string>
+    <string name="error_unknown">Une erreur inconnue est survenue.</string>
+    <string name="general_chat_button_text">Discussion Générale</string>
+    <string name="unknown_user">Utilisateur inconnu</string>
 </resources>

@@ -4,22 +4,22 @@
     <item
         android:id="@+id/navigation_dashboard"
         android:icon="@drawable/ic_dashboard"
-    android:title="Accueil" />
+        android:title="Accueil" />
 
     <item
         android:id="@+id/navigation_readings"
         android:icon="@drawable/ic_readings"
-    android:title="Lectures" />
+        android:title="Lectures" />
 
     <item
         android:id="@+id/navigation_meetings"
         android:icon="@drawable/ic_meetings"
-    android:title="Réunions" />
+        android:title="Réunions" />
 
     <item
-        android:id="@+id/navigation_members"
-        android:icon="@drawable/ic_members"
-    android:title="Membres" />
+        android:id="@+id/navigation_members_profile"
+    android:icon="@drawable/ic_members"
+    android:title="Profil" />
 
     <!-- Pour le "Plus" plus tard
     <item

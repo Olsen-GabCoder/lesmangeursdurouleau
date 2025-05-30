@@ -27,39 +27,63 @@
         android:label="Réunions"
         tools:layout="@layout/fragment_meetings" />
 
-    <!-- ProfileFragment est maintenant la destination pour l'onglet "Membres" -->
-    <!-- Si tu veux un onglet "Membres" qui mène à MembersFragment et que Profile est accessible autrement, il faudra revoir -->
     <fragment
         android:id="@+id/navigation_members_profile"
-    android:name="com.lesmangeursdurouleau.app.ui.members.ProfileFragment"
-    android:label="Profil"
-    tools:layout="@layout/fragment_profile" >
-    <!-- Action pour naviguer de ProfileFragment vers MembersFragment -->
-    <action
-        android:id="@+id/action_profileFragment_to_membersFragment"
-        app:destination="@id/membersFragmentDestination" />
-</fragment>
+        android:name="com.lesmangeursdurouleau.app.ui.members.ProfileFragment"
+        android:label="Profil"
+        tools:layout="@layout/fragment_profile" >
+        <action
+            android:id="@+id/action_profileFragment_to_membersFragment"
+            app:destination="@id/membersFragmentDestination" />
+        <action
+            android:id="@+id/action_profileFragment_to_chatFragment"
+            app:destination="@id/chatFragmentDestination" />
+    </fragment>
 
-    <!-- Nouvelle destination pour MembersFragment -->
-<fragment
-android:id="@+id/membersFragmentDestination"
-android:name="com.lesmangeursdurouleau.app.ui.members.MembersFragment"
-android:label="Liste des Membres"
-tools:layout="@layout/fragment_members" />
+    <fragment
+        android:id="@+id/membersFragmentDestination"
+        android:name="com.lesmangeursdurouleau.app.ui.members.MembersFragment"
+        android:label="Liste des Membres"
+        tools:layout="@layout/fragment_members" >
+        <action
+            android:id="@+id/action_membersFragment_to_publicProfileFragment"
+            app:destination="@id/publicProfileFragmentDestination" />
+    </fragment>
 
-<fragment
-android:id="@+id/bookDetailFragment"
-android:name="com.lesmangeursdurouleau.app.ui.readings.detail.BookDetailFragment"
-android:label="Détails du Livre"
-tools:layout="@layout/fragment_book_detail">
-<argument
-    android:name="bookId"
-    app:argType="string" />
-<argument
-    android:name="bookTitle"
-    app:argType="string"
-    app:nullable="true"
-    android:defaultValue="Détails" />
-</fragment>
+    <fragment
+        android:id="@+id/bookDetailFragment"
+        android:name="com.lesmangeursdurouleau.app.ui.readings.detail.BookDetailFragment"
+        android:label="{bookTitle}"
+        tools:layout="@layout/fragment_book_detail">
+        <argument
+            android:name="bookId"
+            app:argType="string" />
+        <argument
+            android:name="bookTitle"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="Détails du Livre" />
+    </fragment>
 
-    </navigation>
+    <fragment
+        android:id="@+id/publicProfileFragmentDestination"
+        android:name="com.lesmangeursdurouleau.app.ui.members.PublicProfileFragment"
+        android:label="{username}"
+        tools:layout="@layout/fragment_public_profile">
+        <argument
+            android:name="userId"
+            app:argType="string" />
+        <argument
+            android:name="username"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="Profil Membre" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/chatFragmentDestination"
+        android:name="com.lesmangeursdurouleau.app.ui.chat.ChatFragment"
+        android:label="Discussion Générale"
+        tools:layout="@layout/fragment_chat" />
+
+</navigation>

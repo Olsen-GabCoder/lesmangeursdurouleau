@@ -98,6 +98,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_view_members"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/view_members"
+        app:layout_constraintTop_toBottomOf="@id/button_save_profile"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- NOUVEAU BOUTON CI-DESSOUS -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_general_chat"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:text="Discussion Générale"
+    app:icon="@drawable/ic_chat"
+    app:layout_constraintTop_toBottomOf="@id/button_view_members"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Bouton de déconnexion -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_logout"
@@ -107,17 +131,6 @@
         android:layout_marginBottom="16dp"
         android:text="@string/logout"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_view_members"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/view_members"
-        app:layout_constraintTop_toBottomOf="@id/button_save_profile"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

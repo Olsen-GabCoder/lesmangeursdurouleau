@@ -2,44 +2,52 @@ package com.lesmangeursdurouleau.app.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.lesmangeursdurouleau.app.data.remote.FirebaseStorageService // Assure-toi que ce chemin est correct
-import com.lesmangeursdurouleau.app.data.repository.UserRepository // Interface
-import com.lesmangeursdurouleau.app.data.repository.UserRepositoryImpl // Implémentation
+import com.lesmangeursdurouleau.app.data.remote.FirebaseStorageService
+import com.lesmangeursdurouleau.app.data.repository.BookRepository
+import com.lesmangeursdurouleau.app.data.repository.ChatRepository
+import com.lesmangeursdurouleau.app.data.repository.ChatRepositoryImpl
+import com.lesmangeursdurouleau.app.data.repository.UserRepository
+import com.lesmangeursdurouleau.app.data.repository.UserRepositoryImpl
+import com.lesmangeursdurouleau.app.repository.BookRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent // Ou une portée plus adaptée si besoin
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class) // Les dépendances seront des singletons
+@InstallIn(SingletonComponent::class)
 object RepositoryModule {
 
-    // Hilt sait déjà comment créer FirebaseStorageService car il a @Inject constructor et @Singleton
-    // et il sait comment créer FirebaseStorage (grâce à FirebaseModule).
-
     @Provides
-    @Singleton // Une seule instance de UserRepository pour toute l'app
+    @Singleton
     fun provideUserRepository(
-        firestore: FirebaseFirestore, // Hilt saura le fournir grâce à FirebaseModule
-        firebaseAuth: FirebaseAuth,   // Hilt saura le fournir grâce à FirebaseModule
-        firebaseStorageService: FirebaseStorageService // Hilt saura le fournir car il est @Inject constructor
-    ): UserRepository { // Important: retourner l'interface
+        firestore: FirebaseFirestore,
+        firebaseAuth: FirebaseAuth,
+        firebaseStorageService: FirebaseStorageService
+    ): UserRepository {
         return UserRepositoryImpl(firestore, firebaseAuth, firebaseStorageService)
     }
-
-    // Plus tard, tu ajouteras ici comment fournir BookRepository, MeetingRepository, etc.
-    // Exemple pour BookRepository (en supposant que tu as nettoyé les duplications) :
-    /*
-    import com.lesmangeursdurouleau.app.repository.BookRepository // La bonne interface
-    import com.lesmangeursdurouleau.app.repository.BookRepositoryImpl // La bonne implémentation
 
     @Provides
     @Singleton
     fun provideBookRepository(
         firestore: FirebaseFirestore // Hilt le fournit
-    ): BookRepository {
+    ): BookRepositoryImpl {
+        // Assure-toi que BookRepositoryImpl n'instancie pas FirebaseFirestore lui-même
+        // mais le prend bien en constructeur.
+        // Si BookRepositoryImpl a un constructeur par défaut firestore = FirebaseFirestore.getInstance(),
+        // Hilt injectera quand même celui fourni ici si le paramètre est présent.
         return BookRepositoryImpl(firestore)
     }
-    */
+
+    // NOUVEAU PROVIDER CI-DESSOUS
+    @Provides
+    @Singleton
+    fun provideChatRepository(
+        firestore: FirebaseFirestore,
+        firebaseAuth: FirebaseAuth
+    ): ChatRepository {
+        return ChatRepositoryImpl(firestore, firebaseAuth)
+    }
 }

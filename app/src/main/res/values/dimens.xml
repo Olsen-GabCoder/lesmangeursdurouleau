@@ -1,3 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="chat_bubble_margin_horizontal">16dp</dimen>
+    <dimen name="chat_bubble_corner_radius">20dp</dimen>
+    <dimen name="chat_avatar_size">40dp</dimen>
+    <dimen name="chat_timestamp_margin">4dp</dimen>
+    <dimen name="chat_message_padding">12dp</dimen>
+    <dimen name="chat_input_margin">8dp</dimen>
+    <dimen name="chat_bubble_margin_start_received">8dp</dimen>
 </resources>

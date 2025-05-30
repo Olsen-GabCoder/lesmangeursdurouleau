@@ -2,19 +2,20 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.googleGmsServices)
-    alias(libs.plugins.navigationSafeArgs)
-    id("kotlin-kapt") // AJOUTÉ
-    id("dagger.hilt.android.plugin") // AJOUTÉ
+    alias(libs.plugins.navigationSafeArgs) // Garde CETTE LIGNE pour Safe Args
+    id("kotlin-kapt")
+    id("dagger.hilt.android.plugin")
+    // id("androidx.navigation.safeargs.kotlin") // SUPPRIME CETTE LIGNE REDONDANTE
 }
 
 android {
     namespace = "com.lesmangeursdurouleau.app"
-    compileSdk = 35
+    compileSdk = 35 // Assure-toi d'avoir le SDK 35 installé via le SDK Manager si tu cibles API 35
 
     defaultConfig {
         applicationId = "com.lesmangeursdurouleau.app"
         minSdk = 23
-        targetSdk = 35
+        targetSdk = 35 // Si tu cibles API 35, compileSdk doit aussi être 35 ou plus
         versionCode = 1
         versionName = "1.0"
 
@@ -38,9 +39,8 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-        viewBinding = true // Tu avais deux blocs buildFeatures, j'en ai gardé un
+        viewBinding = true
     }
-    // J'ai supprimé le deuxième bloc buildFeatures { viewBinding = true } car il était redondant
 }
 
 dependencies {
@@ -48,7 +48,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.activity.ktx) // Note: Tu avais libs.androidx.activity.ktx, mais dans ton toml c'était androidx.activity
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.fragment.ktx)
 
@@ -62,12 +62,14 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.storage.ktx)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
+    implementation ("com.google.android.gms:play-services-location:21.1.0")
 
     // Glide
     implementation(libs.glide)
 
-    // Hilt Dependencies AJOUTÉES
-    implementation("com.google.dagger:hilt-android:2.51.1")
+    // Hilt Dependencies
+    implementation("com.google.dagger:hilt-android:2.51.1") 
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
 
     // Tests
