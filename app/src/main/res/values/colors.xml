@@ -1,30 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Couleurs de base -->
+<resources xmlns:tools="http://schemas.android.com/tools">
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
 
-    <!-- THÈME SOMBRE POUR LE CHAT (aligné sur l'image de référence) -->
     <color name="chat_background_dark">#0B141A</color>
     <color name="chat_input_background_dark">#1F2C34</color>
     <color name="chat_input_text_dark">#E9EDEF</color>
     <color name="chat_input_hint_dark">#8696A0</color>
 
-    <color name="chat_bubble_sent_bg_dark">#0B80FE</color>    <!-- BLEU VIF -->
-    <color name="chat_text_sent_dark">#FFFFFF</color>         <!-- BLANC -->
-
+    <color name="chat_bubble_sent_bg_dark">#0B80FE</color>
+    <color name="chat_text_sent_dark">#FFFFFF</color>
     <color name="chat_bubble_received_bg_dark">#1F2C34</color>
     <color name="chat_text_received_dark">#E9EDEF</color>
 
     <color name="chat_send_button_bg_dark">#0B80FE</color>
     <color name="chat_send_button_icon_dark">#FFFFFFFF</color>
 
-    <color name="chat_timestamp_dark">#8696A0</color> <!-- Utilisé par le style ChatTimestamp -->
+    <color name="chat_timestamp_dark">#8696A0</color>
     <color name="chat_sender_name_dark">#8696A0</color>
 
+    <color name="reaction_background">#2C3E50</color>
+    <color name="reaction_text_color">#E0E0E0</color> <color name="reaction_stroke_color">#34495E</color>
 
-
-    <!-- TES ANCIENNES COULEURS (gardées pour référence ou autres parties de l'app) -->
     <color name="background_chat_original_light">#F5F7FA</color>
     <color name="chat_bubble_sent_bg_start_original_blue">#4A90E2</color>
     <color name="chat_bubble_sent_bg_end_original_blue">#2B6CC4</color>
@@ -34,4 +31,7 @@
     <color name="chat_timestamp_original_gray">#7A7A7A</color>
     <color name="chat_sender_name_original_gray">#4A4A4A</color>
     <color name="accent_color_original_blue">#4A90E2</color>
+    <color name="reaction_text_color_selected">#FFFFFF</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccentDark">#C51162</color>
 </resources>

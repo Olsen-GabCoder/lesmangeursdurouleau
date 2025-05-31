@@ -49,4 +49,7 @@
     <string name="send_message_button_description">Envoyer le message</string>
     <string name="single_member_typing">Un membre écrit...</string>
     <string name="multiple_members_typing">Plusieurs membres écrivent...</string>
+    <string name="add_reaction_action">Réactions</string>
+    <string name="reaction_updated_successfully">Réaction mise à jour !</string>
+    <string name="remove_reaction_indicator">(Supprimer)</string>
 </resources>

@@ -11,4 +11,7 @@ interface ChatRepository {
     suspend fun deleteChatMessage(messageId: String): Resource<Unit>
     // Méthode pour la pagination
     fun getPreviousChatMessages(oldestMessageTimestamp: Date, limit: Long): Flow<Resource<List<Message>>>
+
+    // MODIFIÉ: Méthode pour basculer (ajouter/retirer) une réaction à un message
+    suspend fun toggleMessageReaction(messageId: String, reactionEmoji: String, userId: String): Resource<Unit>
 }

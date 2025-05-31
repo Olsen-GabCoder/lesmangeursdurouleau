@@ -1,16 +1,17 @@
+// Message.kt
 package com.lesmangeursdurouleau.app.data.model
 
-import com.google.firebase.firestore.ServerTimestamp
+import com.google.firebase.firestore.DocumentId
 import java.util.Date
 
 data class Message(
-    val messageId: String = "", // ID unique du message, sera généré par Firestore ou localement
-    val senderId: String = "", // UID de l'expéditeur
-    val senderUsername: String = "", // Pseudo de l'expéditeur (pour affichage)
+    @DocumentId
+    val messageId: String = "",
+    val senderId: String = "",
+    val senderUsername: String = "",
     val text: String = "",
-    @ServerTimestamp // Important pour que Firestore gère le timestamp automatiquement à l'écriture
-    val timestamp: Date? = null // Sera un Timestamp Firestore, converti en Date à la lecture
-) {
-    // Constructeur sans argument requis par Firestore pour la désérialisation
-    constructor() : this("", "", "", "", null)
-}
+    val timestamp: Date? = null,
+    // *** NOUVEAU/RÉINTRODUIT : POUR L'AFFICHAGE DES RÉACTIONS TOTALES ***
+    val reactions: Map<String, Int> = emptyMap(), // Map d'emoji à leur compte total (pour l'affichage)
+    val userReaction: String? = null // La réaction de l'utilisateur actuel (pour l'affichage)
+)

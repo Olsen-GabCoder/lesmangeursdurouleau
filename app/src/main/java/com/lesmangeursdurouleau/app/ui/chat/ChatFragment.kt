@@ -40,7 +40,7 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
 
     // Pour le TextWatcher et le Handler du timeout de frappe
     private val typingHandler = Handler(Looper.getMainLooper())
-    private var typingStoppedRunnable: Runnable? = null // Renamed for clarity to match ViewModel's logic
+    private var typingStoppedRunnable: Runnable? = null
 
     // Variables pour la gestion de la pagination et du scroll
     private var isLoadingHistory = false
@@ -50,11 +50,13 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
     private var savedScrollPosition = -1
     private var savedScrollOffset = 0
 
+    // NOUVEAU: Liste d'emojis de réaction disponibles pour le menu
+    private val reactionEmojis = listOf("👍", "❤️", "😂", "😡", "🥳")
+
     companion object {
         private const val TAG_FRAGMENT = "ChatFragment"
-        // UI debounce for typing indicator can be shorter than ViewModel's backend timeout
         private const val TYPING_UI_DEBOUNCE_MS = 1000L
-        private const val LOAD_MORE_THRESHOLD = 5 // Seuil pour déclencher le chargement
+        private const val LOAD_MORE_THRESHOLD = 5
     }
 
     override fun onCreateView(
@@ -82,24 +84,19 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
             stackFromEnd = true
         }
 
-        // Changed ID from rv_chat_messages to recyclerView_chat to match layout
         binding.recyclerViewChat.apply {
             adapter = chatAdapter
             layoutManager = linearLayoutManager
 
-            // Ajout du ScrollListener pour la pagination
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
 
-                    // Ne pas déclencher le chargement si on scroll par programmation
                     if (isScrollingProgrammatically) return
 
-                    // Vérifier si on scroll vers le haut (dy < 0)
                     if (dy < 0) {
                         val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
 
-                        // Déclencher le chargement si on est proche du début et pas déjà en train de charger
                         if (firstVisibleItemPosition <= LOAD_MORE_THRESHOLD &&
                             !isLoadingHistory &&
                             !viewModel.allOldMessagesLoaded) {
@@ -114,24 +111,19 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
     }
 
     private fun setupInputTextWatcher() {
-        // Changed ID from et_chat_message_input to et_message_input to match layout
         binding.etMessageInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // Remove any pending callbacks from the handler first
                 typingStoppedRunnable?.let { typingHandler.removeCallbacks(it) }
 
                 if (s.toString().trim().isNotEmpty()) {
                     viewModel.userStartedTyping()
                 } else {
-                    // If text becomes empty, user has stopped typing immediately
                     viewModel.userStoppedTyping()
                 }
             }
             override fun afterTextChanged(s: Editable?) {
                 if (s.toString().trim().isNotEmpty()) {
-                    // Schedule a delayed callback for 'stopped typing'
-                    // This ensures that if the user pauses, 'stopped typing' is sent after a delay
                     typingStoppedRunnable = Runnable { viewModel.userStoppedTyping() }
                     typingHandler.postDelayed(typingStoppedRunnable!!, TYPING_UI_DEBOUNCE_MS)
                 }
@@ -141,7 +133,6 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
 
     private fun setupClickListeners() {
         Log.d(TAG_FRAGMENT, "setupClickListeners")
-        // Changed ID from btn_send_message to btn_send to match layout
         binding.btnSend.setOnClickListener {
             val messageText = binding.etMessageInput.text.toString().trim()
             if (messageText.isNotEmpty()) {
@@ -149,7 +140,6 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
                 viewModel.sendMessage(messageText)
             } else {
                 Log.w(TAG_FRAGMENT, "Tentative d'envoi d'un message vide.")
-                // Ensure this string resource exists in strings.xml
                 Toast.makeText(requireContext(), R.string.message_cannot_be_empty, Toast.LENGTH_SHORT).show()
             }
         }
@@ -158,28 +148,22 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
     private fun setupObservers() {
         Log.d(TAG_FRAGMENT, "setupObservers")
 
-        // Observateur pour les messages principaux (temps réel)
         viewModel.messages.observe(viewLifecycleOwner) { resource ->
             Log.d(TAG_FRAGMENT, "Observation des messages: $resource")
             when (resource) {
                 is Resource.Loading -> {
-                    // Optionnel : afficher un indicateur de chargement initial
-                    showLoadingIndicator(true) // For initial load
+                    showLoadingIndicator(true)
                 }
                 is Resource.Success -> {
-                    showLoadingIndicator(false) // Hide initial loading
+                    showLoadingIndicator(false)
                     val messages = resource.data
                     if (messages.isNullOrEmpty()) {
                         chatAdapter.submitList(emptyList())
-                        binding.tvChatEmptyMessage.visibility = View.VISIBLE // Show empty message if no messages
+                        binding.tvChatEmptyMessage.visibility = View.VISIBLE
                     } else {
-                        binding.tvChatEmptyMessage.visibility = View.GONE // Hide empty message
+                        binding.tvChatEmptyMessage.visibility = View.GONE
                         val currentList = chatAdapter.currentList
                         chatAdapter.submitList(messages.toList()) {
-                            // Auto-scroll uniquement pour les nouveaux messages (pas l'historique)
-                            // Scroll to bottom if current list was empty, or if new messages arrived
-                            // and user is near the bottom, or not actively scrolling up.
-                            // Better scroll logic for new messages:
                             val lastVisiblePosition = linearLayoutManager.findLastVisibleItemPosition()
                             val totalItemCount = linearLayoutManager.itemCount
                             val isAtBottom = lastVisiblePosition == totalItemCount - 1 || totalItemCount == 0
@@ -191,22 +175,20 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
                     }
                 }
                 is Resource.Error -> {
-                    showLoadingIndicator(false) // Hide initial loading
+                    showLoadingIndicator(false)
                     Log.e(TAG_FRAGMENT, "Erreur lors du chargement des messages: ${resource.message}")
                     Toast.makeText(requireContext(), "Erreur: ${resource.message}", Toast.LENGTH_LONG).show()
-                    binding.tvChatEmptyMessage.visibility = View.VISIBLE // Can show empty message or error state
+                    binding.tvChatEmptyMessage.visibility = View.VISIBLE
                 }
             }
         }
 
-        // Observateur pour l'historique des messages (pagination)
         viewModel.oldMessagesState.observe(viewLifecycleOwner) { resource ->
             Log.d(TAG_FRAGMENT, "Observation de l'historique: $resource")
             when (resource) {
                 is Resource.Loading -> {
                     isLoadingHistory = true
-                    // Optionnel : afficher un indicateur de chargement en haut
-                    showLoadingIndicator(true) // For loading more history
+                    showLoadingIndicator(true)
                 }
                 is Resource.Success -> {
                     isLoadingHistory = false
@@ -230,30 +212,23 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
             }
         }
 
-        // Observateur pour les détails utilisateur
         viewModel.userDetailsCache.observe(viewLifecycleOwner) { userMap ->
             chatAdapter.setUserDetails(userMap)
         }
 
-        // Observateur pour le statut d'envoi de message
         viewModel.sendMessageStatus.observe(viewLifecycleOwner) { resource ->
-            // Changed ID from et_chat_message_input to et_message_input
             binding.btnSend.isEnabled = resource !is Resource.Loading
             binding.etMessageInput.isEnabled = resource !is Resource.Loading
 
             when (resource) {
-                is Resource.Loading -> {
-                    // Optionnel : afficher un indicateur de chargement
-                }
+                is Resource.Loading -> {}
                 is Resource.Success -> {
                     binding.etMessageInput.text.clear()
-                    // The ViewModel handles calling userStoppedTyping after sending
-                    // No need to call it here again explicitly, unless you want an immediate UI reset.
                 }
                 is Resource.Error -> {
                     Toast.makeText(requireContext(), "Erreur envoi: ${resource.message}", Toast.LENGTH_LONG).show()
                 }
-                null -> {} // Do nothing when null
+                null -> {}
             }
 
             if (resource != null && resource !is Resource.Loading) {
@@ -261,7 +236,6 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
             }
         }
 
-        // Observateur pour le statut de suppression
         viewModel.deleteMessageStatus.observe(viewLifecycleOwner) { resource ->
             Log.d(TAG_FRAGMENT, "Observation statut suppression: $resource")
             when (resource) {
@@ -275,7 +249,26 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
             }
         }
 
-        // Observateur pour les utilisateurs en train d'écrire
+        // Observateur pour le statut des réactions (déjà présent et correct)
+        viewModel.reactionStatus.observe(viewLifecycleOwner) { resource ->
+            Log.d(TAG_FRAGMENT, "Observation statut réaction: $resource")
+            when (resource) {
+                is Resource.Loading -> {
+                    // Optionnel: afficher un indicateur de chargement discret (ex: un petit spinner sur le message)
+                }
+                is Resource.Success -> {
+                    Toast.makeText(requireContext(), R.string.reaction_updated_successfully, Toast.LENGTH_SHORT).show()
+                }
+                is Resource.Error -> {
+                    Toast.makeText(requireContext(), "Erreur réaction: ${resource.message}", Toast.LENGTH_LONG).show()
+                }
+                null -> {}
+            }
+            if (resource != null && resource !is Resource.Loading) {
+                viewModel.clearReactionStatus()
+            }
+        }
+
         viewModel.typingUsers.observe(viewLifecycleOwner) { typingUserIds ->
             Log.d(TAG_FRAGMENT, "Utilisateurs en train d'écrire: ${typingUserIds.joinToString()}")
             val currentUserUid = viewModel.firebaseAuth.currentUser?.uid
@@ -303,17 +296,13 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
     private fun addOldMessagesToList(oldMessages: List<Message>) {
         Log.d(TAG_FRAGMENT, "Ajout de ${oldMessages.size} messages d'historique")
 
-        // Sauvegarder la position actuelle avant d'ajouter les messages
         saveScrollPosition()
 
         val currentList = chatAdapter.currentList.toMutableList()
-        // Ajouter les anciens messages AU DÉBUT de la liste
-        // Using distinctBy to prevent duplicates if any message is fetched again
         val newList = (oldMessages + currentList).distinctBy { it.messageId }.sortedBy { it.timestamp }
 
         isScrollingProgrammatically = true
         chatAdapter.submitList(newList) {
-            // Restaurer la position de scroll après que la liste soit mise à jour
             restoreScrollPosition(oldMessages.size)
             isScrollingProgrammatically = false
         }
@@ -332,12 +321,10 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
     private fun restoreScrollPosition(newItemsCount: Int) {
         if (savedScrollPosition != -1) {
             val newPosition = savedScrollPosition + newItemsCount
-            // Ensure the new position is valid before scrolling
             if (newPosition >= 0 && newPosition < chatAdapter.itemCount) {
                 linearLayoutManager.scrollToPositionWithOffset(newPosition, savedScrollOffset)
                 Log.d(TAG_FRAGMENT, "Position restaurée: $newPosition (ajout de $newItemsCount items)")
             } else {
-                // Fallback: if calculated position is invalid, scroll to bottom
                 Log.w(TAG_FRAGMENT, "Calculated scroll position invalid ($newPosition), scrolling to bottom.")
                 binding.recyclerViewChat.scrollToPosition(chatAdapter.itemCount - 1)
             }
@@ -345,7 +332,6 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
     }
 
     private fun showLoadingIndicator(show: Boolean) {
-        // Toggles the visibility of your ProgressBar
         binding.progressBarChat.visibility = if (show) View.VISIBLE else View.GONE
         Log.d(TAG_FRAGMENT, "Indicateur de chargement: ${if (show) "VISIBLE" else "GONE"}")
     }
@@ -354,9 +340,6 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
     override fun onProfileClicked(userId: String, username: String) {
         Log.d(TAG_FRAGMENT, "onProfileClicked: userId=$userId, username=$username")
         try {
-            // Ensure you have a navigation action defined in your nav graph
-            // example: <action android:id="@+id/action_chatFragment_to_publicProfileFragment" app:destination="@id/publicProfileFragment" />
-            // and the arguments are correctly passed
             val action = ChatFragmentDirections.actionChatFragmentToPublicProfileFragment(userId, username)
             findNavController().navigate(action)
         } catch (e: Exception) {
@@ -369,11 +352,28 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
     override fun onMessageLongClicked(message: Message, anchorView: View) {
         Log.d(TAG_FRAGMENT, "onMessageLongClicked: messageId=${message.messageId}")
         val popupMenu = PopupMenu(requireContext(), anchorView)
-        // Ensure these string resources exist in strings.xml
-        popupMenu.menu.add(0, R.id.menu_item_copy_text, 0, getString(R.string.copy_text_action))
 
+        // Options de base (copier, supprimer)
+        popupMenu.menu.add(0, R.id.menu_item_copy_text, 0, getString(R.string.copy_text_action))
         if (message.senderId == viewModel.firebaseAuth.currentUser?.uid) {
             popupMenu.menu.add(0, R.id.menu_item_delete_message, 1, getString(R.string.delete_message_action))
+        }
+
+        // Ajout du sous-menu pour les réactions
+        val reactionSubMenu = popupMenu.menu.addSubMenu(0, R.id.menu_group_reactions, 2, getString(R.string.add_reaction_action))
+
+        // Ajoutez les emojis au sous-menu.
+        // Si l'utilisateur a déjà réagi avec un emoji spécifique,
+        // vous pouvez l'indiquer visuellement (ex: avec un coche ou en changeant son titre).
+        val currentUserReaction = message.userReaction // C'est le champ que vous avez ajouté dans Message
+        reactionEmojis.forEachIndexed { index, emoji ->
+            val menuItemTitle = if (emoji == currentUserReaction) {
+                "$emoji ${getString(R.string.remove_reaction_indicator)}" // Ex: "👍 (Supprimer)"
+            } else {
+                emoji
+            }
+            // Utilisation du même itemId pour simplifier la gestion, l'important est le titre pour identifier l'emoji
+            reactionSubMenu.add(R.id.menu_group_reactions, index, index, menuItemTitle)
         }
 
         popupMenu.setOnMenuItemClickListener { menuItem ->
@@ -390,17 +390,36 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
                     }
                     true
                 }
-                else -> false
+                else -> {
+                    // Gérer les clics sur les emojis de réaction
+                    if (menuItem.groupId == R.id.menu_group_reactions) {
+                        val selectedEmoji = menuItem.title.toString().replace(getString(R.string.remove_reaction_indicator), "").trim()
+                        Log.d(TAG_FRAGMENT, "Menu réaction sélectionné: '$selectedEmoji' pour message ${message.messageId}")
+                        // Appeler la méthode du ViewModel pour gérer l'ajout/suppression de la réaction
+                        viewModel.addReactionToMessage(message.messageId, selectedEmoji)
+                        true
+                    } else {
+                        false
+                    }
+                }
             }
         }
         popupMenu.show()
+    }
+
+    // Implémentation de onReactionClicked (appelé par l'adaptateur lorsque l'utilisateur clique sur un emoji affiché)
+    override fun onReactionClicked(message: Message, reactionEmoji: String) {
+        Log.d(TAG_FRAGMENT, "onReactionClicked (from adapter): messageId=${message.messageId}, emoji='$reactionEmoji'")
+        // Quand une réaction existante est cliquée (depuis les bulles de réaction affichées par l'adaptateur),
+        // on appelle le ViewModel pour basculer son état (ajouter/supprimer).
+        // Le ViewModel/Repository saura si c'est un ajout ou une suppression.
+        viewModel.addReactionToMessage(message.messageId, reactionEmoji)
     }
 
     private fun copyTextToClipboard(text: String) {
         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("message_text", text)
         clipboard.setPrimaryClip(clip)
-        // Ensure this string resource exists in strings.xml
         Toast.makeText(requireContext(), R.string.text_copied_to_clipboard, Toast.LENGTH_SHORT).show()
     }
 
@@ -412,10 +431,10 @@ class ChatFragment : Fragment(), OnProfileClickListener, OnMessageInteractionLis
 
     override fun onDestroyView() {
         Log.d(TAG_FRAGMENT, "onDestroyView")
-        viewModel.userStoppedTyping() // Ensure typing status is reset when the view is destroyed
-        typingStoppedRunnable?.let { typingHandler.removeCallbacks(it) } // Remove any pending UI-level callbacks
+        viewModel.userStoppedTyping()
+        typingStoppedRunnable?.let { typingHandler.removeCallbacks(it) }
         typingStoppedRunnable = null
-        binding.recyclerViewChat.adapter = null // Clear adapter to prevent memory leaks
+        binding.recyclerViewChat.adapter = null
         super.onDestroyView()
         _binding = null
     }

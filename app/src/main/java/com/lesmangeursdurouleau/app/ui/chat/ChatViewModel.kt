@@ -54,6 +54,10 @@ class ChatViewModel @Inject constructor(
     private val _deleteMessageStatus = MutableLiveData<Resource<Unit>?>()
     val deleteMessageStatus: LiveData<Resource<Unit>?> = _deleteMessageStatus
 
+    // NOUVEAU: Statut de l'ajout/suppression de réaction
+    private val _reactionStatus = MutableLiveData<Resource<Unit>?>()
+    val reactionStatus: LiveData<Resource<Unit>?> = _reactionStatus
+
     // Cache des détails utilisateur
     private val _userDetailsCache = MutableLiveData<Map<String, User>>()
     val userDetailsCache: LiveData<Map<String, User>> = _userDetailsCache
@@ -312,12 +316,36 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    // NOUVEAU: Fonction pour ajouter/retirer une réaction
+    fun addReactionToMessage(messageId: String, reactionEmoji: String) {
+        val userId = currentUserId
+        if (userId == null) {
+            Log.e(TAG, "addReactionToMessage: Current user ID is null, cannot add reaction.")
+            _reactionStatus.value = Resource.Error("Utilisateur non authentifié.")
+            return
+        }
+
+        Log.d(TAG, "addReactionToMessage appelé pour message $messageId avec réaction '$reactionEmoji' par user $userId")
+        viewModelScope.launch {
+            _reactionStatus.value = Resource.Loading() // Indique que l'opération est en cours
+            // Appel à la nouvelle méthode `toggleMessageReaction` du repository
+            val result = chatRepository.toggleMessageReaction(messageId, reactionEmoji, userId)
+            _reactionStatus.value = result // Met à jour le statut
+            Log.d(TAG, "Résultat de la réaction: $result")
+        }
+    }
+
     fun clearSendMessageStatus() {
         _sendMessageStatus.value = null
     }
 
     fun clearDeleteMessageStatus() {
         _deleteMessageStatus.value = null
+    }
+
+    // NOUVEAU: Fonction pour réinitialiser le statut de réaction
+    fun clearReactionStatus() {
+        _reactionStatus.value = null
     }
 
     fun resetPaginationState() {
