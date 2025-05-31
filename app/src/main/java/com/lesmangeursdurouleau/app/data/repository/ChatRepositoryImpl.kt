@@ -10,9 +10,8 @@ import com.lesmangeursdurouleau.app.utils.Resource
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-// import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
-// import java.util.Date
+import java.util.Date // Assure-toi que cet import est là
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,30 +23,26 @@ class ChatRepositoryImpl @Inject constructor(
 
     companion object {
         private const val TAG = "ChatRepositoryImpl"
-        private const val MESSAGES_LIMIT = 50L // Long pour limitToLast
+        const val MESSAGES_INITIAL_LIMIT = 50L
+        private const val MESSAGES_PAGINATION_LIMIT = 20L // Nombre de messages à charger par page d'historique
     }
 
-    // --- VRAIE IMPLÉMENTATION FIRESTORE POUR getGeneralChatMessages ---
     override fun getGeneralChatMessages(): Flow<Resource<List<Message>>> = callbackFlow {
         Log.d(TAG, "getGeneralChatMessages (Firestore) appelé.")
         trySend(Resource.Loading())
-
         val query = firestore.collection(FirebaseConstants.COLLECTION_GENERAL_CHAT)
-            .orderBy("timestamp", Query.Direction.ASCENDING) // Messages du plus ancien au plus récent
-            .limitToLast(MESSAGES_LIMIT) // Récupère les N derniers messages.
-        // Convertir MESSAGES_LIMIT en Int si limitToLast l'exige strictement,
-        // mais Long devrait fonctionner. Firestore SDK gère cela.
+            .orderBy("timestamp", Query.Direction.ASCENDING)
+            .limitToLast(MESSAGES_INITIAL_LIMIT) // Limite initiale
 
+        // ... (reste de getGeneralChatMessages inchangé) ...
         Log.d(TAG, "getGeneralChatMessages (Firestore): Requête créée pour la collection ${FirebaseConstants.COLLECTION_GENERAL_CHAT}")
-
         val listenerRegistration = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.e(TAG, "getGeneralChatMessages (Firestore): Erreur d'écoute - ${error.localizedMessage}", error)
                 trySend(Resource.Error("Erreur Firestore: ${error.localizedMessage ?: "Erreur inconnue"}"))
-                close(error) // Important de fermer le flow en cas d'erreur irrécupérable
+                close(error)
                 return@addSnapshotListener
             }
-
             if (snapshot != null) {
                 val messages = mutableListOf<Message>()
                 Log.d(TAG, "getGeneralChatMessages (Firestore): Snapshot reçu avec ${snapshot.documents.size} documents.")
@@ -55,10 +50,7 @@ class ChatRepositoryImpl @Inject constructor(
                     try {
                         val msg = document.toObject(Message::class.java)
                         if (msg != null) {
-                            // Assigner l'ID du document au messageId car toObject ne le fait pas par défaut.
-                            // Et s'assurer que le timestamp est bien un objet Date (géré par @ServerTimestamp et toObject)
                             messages.add(msg.copy(messageId = document.id))
-                            Log.v(TAG, "Message converti: ID=${document.id}, Text=${msg.text}, Timestamp=${msg.timestamp}")
                         } else {
                             Log.w(TAG, "getGeneralChatMessages (Firestore): Document ${document.id} converti en Message null.")
                         }
@@ -67,22 +59,74 @@ class ChatRepositoryImpl @Inject constructor(
                     }
                 }
                 Log.i(TAG, "getGeneralChatMessages (Firestore): ${messages.size} messages traités et prêts à être émis.")
-                trySend(Resource.Success(messages)) // La liste est déjà dans l'ordre chronologique (ASCENDING)
+                trySend(Resource.Success(messages))
             } else {
                 Log.d(TAG, "getGeneralChatMessages (Firestore): Snapshot est null, émission d'une liste vide.")
-                trySend(Resource.Success(emptyList())) // Cas où le snapshot est null mais pas d'erreur
+                trySend(Resource.Success(emptyList()))
             }
         }
-        // Cette partie est cruciale pour libérer les ressources lorsque le Flow n'est plus collecté.
         awaitClose {
             Log.d(TAG, "getGeneralChatMessages (Firestore): Fermeture du listener Snapshot.")
             listenerRegistration.remove()
         }
     }
 
-    // --- VRAIE IMPLÉMENTATION FIRESTORE POUR sendGeneralChatMessage ---
-    // (Cette version devrait déjà être celle que tu as et qui fonctionne pour l'envoi)
+    // NOUVELLE IMPLÉMENTATION
+    override fun getPreviousChatMessages(oldestMessageTimestamp: Date, limit: Long): Flow<Resource<List<Message>>> = callbackFlow {
+        Log.d(TAG, "getPreviousChatMessages (Firestore) appelé. Timestamp pivot: $oldestMessageTimestamp, Limite: $limit")
+        trySend(Resource.Loading())
+
+        val query = firestore.collection(FirebaseConstants.COLLECTION_GENERAL_CHAT)
+            .orderBy("timestamp", Query.Direction.DESCENDING) // Messages du plus récent au plus ancien
+            .startAfter(oldestMessageTimestamp) // Commencer APRÈS le timestamp du plus ancien message affiché
+            // Note: Pour firestore, startAfter() avec un timestamp signifie "commencer après CE timestamp".
+            // Puisque nous trions par DESCENDING, cela nous donne les messages plus anciens.
+            .limit(limit) // Limiter le nombre de messages récupérés
+
+        Log.d(TAG, "getPreviousChatMessages (Firestore): Requête créée.")
+
+        // Pas besoin d'un listener en temps réel ici, une simple récupération suffit pour l'historique.
+        // Mais pour la cohérence du retour (Flow<Resource<...>>), on peut utiliser callbackFlow ou un simple flow { try { emit(Success) } catch { emit(Error) } }
+        // Utiliser get() pour une seule lecture
+        query.get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot != null) {
+                    val messages = mutableListOf<Message>()
+                    Log.d(TAG, "getPreviousChatMessages (Firestore): Snapshot reçu avec ${snapshot.documents.size} documents d'historique.")
+                    for (document in snapshot.documents) {
+                        try {
+                            val msg = document.toObject(Message::class.java)
+                            if (msg != null) {
+                                messages.add(msg.copy(messageId = document.id))
+                            } else {
+                                Log.w(TAG, "getPreviousChatMessages (Firestore): Document ${document.id} converti en Message null.")
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "getPreviousChatMessages (Firestore): Erreur de conversion du document ${document.id}", e)
+                        }
+                    }
+                    // Les messages sont récupérés en ordre DESCENDING (plus récent des anciens en premier).
+                    // Pour les ajouter en haut de la liste existante, il faut les inverser pour avoir le plus ancien de ce lot en premier.
+                    Log.i(TAG, "getPreviousChatMessages (Firestore): ${messages.size} messages d'historique traités.")
+                    trySend(Resource.Success(messages.reversed()))
+                } else {
+                    Log.d(TAG, "getPreviousChatMessages (Firestore): Snapshot est null, émission d'une liste vide.")
+                    trySend(Resource.Success(emptyList()))
+                }
+                close() // Fermer le flow après avoir émis les données car ce n'est pas un listener continu
+            }
+            .addOnFailureListener { error ->
+                Log.e(TAG, "getPreviousChatMessages (Firestore): Erreur de récupération - ${error.localizedMessage}", error)
+                trySend(Resource.Error("Erreur Firestore: ${error.localizedMessage ?: "Erreur inconnue"}"))
+                close(error)
+            }
+        // callbackFlow nécessite awaitClose
+        awaitClose { Log.d(TAG, "getPreviousChatMessages (Firestore): Flow fermé.") }
+    }
+
+
     override suspend fun sendGeneralChatMessage(message: Message): Resource<Unit> {
+        // ... (code de sendGeneralChatMessage inchangé) ...
         val currentUser = firebaseAuth.currentUser
         if (currentUser == null) {
             Log.e(TAG, "sendGeneralChatMessage (Firestore): Utilisateur non authentifié.")
@@ -92,15 +136,13 @@ class ChatRepositoryImpl @Inject constructor(
             Log.e(TAG, "sendGeneralChatMessage (Firestore): Le message est vide.")
             return Resource.Error("Le message ne peut pas être vide.")
         }
-
         val messageToSend = message.copy(
-            messageId = "", // Laisser vide pour que Firestore génère l'ID
+            messageId = "",
             senderId = currentUser.uid,
             senderUsername = currentUser.displayName ?: "Utilisateur Anonyme",
-            timestamp = null // Firestore remplira ceci grâce à @ServerTimestamp
+            timestamp = null
         )
         Log.d(TAG, "sendGeneralChatMessage (Firestore): Tentative d'envoi du message: $messageToSend")
-
         return try {
             firestore.collection(FirebaseConstants.COLLECTION_GENERAL_CHAT)
                 .add(messageToSend)
@@ -110,6 +152,26 @@ class ChatRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "sendGeneralChatMessage (Firestore): Erreur d'envoi - ${e.localizedMessage}", e)
             Resource.Error("Erreur lors de l'envoi du message: ${e.localizedMessage}")
+        }
+    }
+
+    override suspend fun deleteChatMessage(messageId: String): Resource<Unit> {
+        // ... (code de deleteChatMessage inchangé) ...
+        if (messageId.isBlank()) {
+            Log.e(TAG, "deleteChatMessage: messageId est vide.")
+            return Resource.Error("ID de message invalide.")
+        }
+        Log.d(TAG, "deleteChatMessage: Tentative de suppression du message ID: $messageId")
+        return try {
+            firestore.collection(FirebaseConstants.COLLECTION_GENERAL_CHAT)
+                .document(messageId)
+                .delete()
+                .await()
+            Log.i(TAG, "deleteChatMessage: Message ID: $messageId supprimé avec succès de Firestore.")
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteChatMessage: Erreur lors de la suppression du message ID: $messageId - ${e.localizedMessage}", e)
+            Resource.Error("Erreur lors de la suppression du message: ${e.localizedMessage}")
         }
     }
 }

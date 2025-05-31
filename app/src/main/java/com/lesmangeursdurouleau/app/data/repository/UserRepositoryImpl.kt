@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions // NOUVEL IMPORT pour SetOptions.merge()
 import com.lesmangeursdurouleau.app.data.model.User
 import com.lesmangeursdurouleau.app.data.remote.FirebaseStorageService
 import com.lesmangeursdurouleau.app.remote.FirebaseConstants
@@ -24,7 +25,6 @@ class UserRepositoryImpl @Inject constructor(
         private const val TAG = "UserRepositoryImpl"
     }
 
-    // ... updateUserProfile et updateUserProfilePicture restent inchangés ...
     override suspend fun updateUserProfile(userId: String, username: String): Resource<Unit> {
         if (username.isBlank()) {
             return Resource.Error("Le pseudo ne peut pas être vide.")
@@ -39,7 +39,7 @@ class UserRepositoryImpl @Inject constructor(
             user.updateProfile(profileUpdates).await()
             Log.d(TAG, "updateUserProfile: Firebase Auth displayName mis à jour pour $userId.")
             val userDocRef = firestore.collection(FirebaseConstants.COLLECTION_USERS).document(userId)
-            userDocRef.update("username", username).await()
+            userDocRef.update("username", username).await() // Met à jour seulement le champ username
             Log.d(TAG, "updateUserProfile: Champ 'username' dans Firestore mis à jour pour $userId.")
             return Resource.Success(Unit)
         } catch (e: Exception) {
@@ -59,7 +59,7 @@ class UserRepositoryImpl @Inject constructor(
             if (uploadResult is Resource.Success) {
                 val photoUrl = uploadResult.data!!
                 val userDocRef = firestore.collection(FirebaseConstants.COLLECTION_USERS).document(userId)
-                userDocRef.update("profilePictureUrl", photoUrl).await()
+                userDocRef.update("profilePictureUrl", photoUrl).await() // Met à jour seulement le champ profilePictureUrl
                 Log.d(TAG, "updateUserProfilePicture: Photo de profil mise à jour dans Firestore pour $userId.")
                 val profileUpdates = UserProfileChangeRequest.Builder().setPhotoUri(android.net.Uri.parse(photoUrl)).build()
                 user.updateProfile(profileUpdates).await()
@@ -76,7 +76,6 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override fun getAllUsers(): Flow<Resource<List<User>>> = callbackFlow {
-        // ... (code de getAllUsers inchangé, il semble fonctionner) ...
         trySend(Resource.Loading())
         Log.d(TAG, "getAllUsers: Tentative de récupération de tous les utilisateurs.")
         val listenerRegistration = firestore.collection(FirebaseConstants.COLLECTION_USERS)
@@ -121,8 +120,7 @@ class UserRepositoryImpl @Inject constructor(
             return@callbackFlow
         }
         trySend(Resource.Loading())
-        Log.i(TAG, "getUserById: Tentative de récupération de l'utilisateur ID: '$userId' depuis la collection '${FirebaseConstants.COLLECTION_USERS}'.") // LOG AMÉLIORÉ
-
+        Log.i(TAG, "getUserById: Tentative de récupération de l'utilisateur ID: '$userId' depuis la collection '${FirebaseConstants.COLLECTION_USERS}'.")
         val docRef = firestore.collection(FirebaseConstants.COLLECTION_USERS).document(userId)
         val listenerRegistration = docRef.addSnapshotListener { documentSnapshot, error ->
             if (error != null) {
@@ -131,37 +129,51 @@ class UserRepositoryImpl @Inject constructor(
                 close(error)
                 return@addSnapshotListener
             }
-
             if (documentSnapshot != null && documentSnapshot.exists()) {
                 Log.d(TAG, "getUserById: Document trouvé pour ID '$userId'. Tentative de conversion.")
                 try {
-                    val docId = documentSnapshot.id // Devrait être égal à userId
+                    val docId = documentSnapshot.id
                     val username = documentSnapshot.getString("username") ?: ""
                     val email = documentSnapshot.getString("email") ?: ""
                     val profilePictureUrl = documentSnapshot.getString("profilePictureUrl")
                     val createdAtTimestamp = documentSnapshot.getTimestamp("createdAt")
                     val createdAtLong = createdAtTimestamp?.toDate()?.time
-
-                    val user = User(
-                        uid = docId,
-                        username = username,
-                        email = email,
-                        profilePictureUrl = profilePictureUrl,
-                        createdAt = createdAtLong
-                    )
+                    val user = User(uid = docId, username = username, email = email, profilePictureUrl = profilePictureUrl, createdAt = createdAtLong)
                     Log.i(TAG, "getUserById: Utilisateur converti avec succès pour ID '$userId': $user")
                     trySend(Resource.Success(user))
-
                 } catch (e: Exception) {
                     Log.e(TAG, "getUserById: Erreur de conversion du document pour ID '$userId': ${e.message}", e)
                     trySend(Resource.Error("Erreur de conversion des données utilisateur."))
                 }
             } else {
-                // C'EST ICI QUE L'ERREUR "Utilisateur non trouvé" EST GÉNÉRÉE
                 Log.w(TAG, "getUserById: Aucun document trouvé pour l'utilisateur ID '$userId'. DocumentSnapshot: $documentSnapshot")
                 trySend(Resource.Error("Utilisateur non trouvé."))
             }
         }
         awaitClose { Log.d(TAG, "getUserById: Fermeture du listener pour ID '$userId'."); listenerRegistration.remove() }
+    }
+
+    // IMPLÉMENTATION DE LA NOUVELLE MÉTHODE
+    override suspend fun updateUserTypingStatus(userId: String, isTyping: Boolean): Resource<Unit> {
+        if (userId.isBlank()) {
+            Log.e(TAG, "updateUserTypingStatus: userId est vide.")
+            return Resource.Error("ID utilisateur invalide pour la mise à jour du statut de frappe.")
+        }
+        Log.d(TAG, "updateUserTypingStatus: Pour userID '$userId', statut isTyping: $isTyping")
+
+        return try {
+            // Utiliser set avec SetOptions.merge() est plus robuste si le champ n'existe pas encore.
+            // Cela créera le champ s'il est absent, ou le mettra à jour s'il existe, sans affecter les autres champs.
+            val typingUpdate = mapOf("isTypingInGeneralChat" to isTyping)
+            firestore.collection(FirebaseConstants.COLLECTION_USERS)
+                .document(userId)
+                .set(typingUpdate, SetOptions.merge()) // Utilisation de set avec merge
+                .await()
+            Log.d(TAG, "updateUserTypingStatus: Statut de frappe pour '$userId' mis à jour à '$isTyping' dans Firestore.")
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "updateUserTypingStatus: Erreur lors de la mise à jour du statut de frappe pour '$userId': ${e.message}", e)
+            Resource.Error("Erreur technique lors de la mise à jour du statut: ${e.localizedMessage}")
+        }
     }
 }

@@ -8,6 +8,8 @@ interface UserRepository {
     suspend fun updateUserProfile(userId: String, username: String): Resource<Unit>
     suspend fun updateUserProfilePicture(userId: String, imageData: ByteArray): Resource<String>
     fun getAllUsers(): Flow<Resource<List<User>>>
-    // NOUVELLE FONCTION CI-DESSOUS
-    fun getUserById(userId: String): Flow<Resource<User>> // Pour récupérer un utilisateur spécifique
+    fun getUserById(userId: String): Flow<Resource<User>>
+
+    // NOUVELLE MÉTHODE
+    suspend fun updateUserTypingStatus(userId: String, isTyping: Boolean): Resource<Unit>
 }

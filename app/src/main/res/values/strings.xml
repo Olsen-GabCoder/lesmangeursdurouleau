@@ -39,4 +39,14 @@
     <string name="general_chat_button_text">Discussion Générale</string>
     <string name="unknown_user">Utilisateur inconnu</string>
     <string name="message_cannot_be_empty">Le message ne peut pas être vide</string>
+    <string name="copy_text_action">Copier le texte</string>
+    <string name="text_copied_to_clipboard">Texte copié</string>
+    <string name="delete_message_action">Supprimer le message</string>
+    <string name="deleting_message">Suppression du message...</string>
+    <string name="message_deleted_successfully">Message supprimé</string>
+    <string name="someone">Quelqu\'un</string>
+    <string name="typing_indicator_text">%1$s est en train d\'écrire...</string>
+    <string name="send_message_button_description">Envoyer le message</string>
+    <string name="single_member_typing">Un membre écrit...</string>
+    <string name="multiple_members_typing">Plusieurs membres écrivent...</string>
 </resources>
