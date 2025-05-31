@@ -23,6 +23,11 @@
                 <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\asus\.android\avd\Pixel_9_Pro_API_35.avd" />
               </handle>
             </Target>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\asus\.android\avd\Pixel_7_API_35.avd" />
+              </handle>
+            </Target>
           </targets>
         </DialogSelection>
       </SelectionState>

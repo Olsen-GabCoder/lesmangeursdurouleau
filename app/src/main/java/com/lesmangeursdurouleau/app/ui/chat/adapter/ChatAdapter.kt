@@ -1,6 +1,5 @@
 package com.lesmangeursdurouleau.app.ui.chat.adapter
 
-// import android.text.format.DateUtils // Commenté si non utilisé
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,10 +14,9 @@ import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.lesmangeursdurouleau.app.R
 import com.lesmangeursdurouleau.app.data.model.Message
-import com.lesmangeursdurouleau.app.data.model.User
+import com.lesmangeursdurouleau.app.data.model.User // Ensure this import is present
 import com.lesmangeursdurouleau.app.databinding.ItemChatMessageBinding
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 // Interface existante pour le clic sur le profil
@@ -33,10 +31,11 @@ interface OnMessageInteractionListener {
 
 class ChatAdapter(
     private val profileClickListener: OnProfileClickListener,
-    private val messageInteractionListener: OnMessageInteractionListener // AJOUTÉ
+    private val messageInteractionListener: OnMessageInteractionListener
 ) : ListAdapter<Message, ChatAdapter.MessageViewHolder>(MessageDiffCallback()) {
 
     private var currentUserId: String? = FirebaseAuth.getInstance().currentUser?.uid
+    // Corrected: userDetailsMap now correctly holds User objects
     private var userDetailsMap: Map<String, User> = emptyMap()
 
     companion object {
@@ -46,9 +45,11 @@ class ChatAdapter(
         private const val SENDER_INFO_CONSOLIDATION_THRESHOLD_MS = 5 * 60 * 1000L
     }
 
+    // Corrected: This function now accepts Map<String, User>
     fun setUserDetails(newUserMap: Map<String, User>) {
         val oldUserMap = userDetailsMap
         userDetailsMap = newUserMap
+        // Only notify if there's a significant change to avoid unnecessary redraws
         if (oldUserMap != newUserMap) {
             Log.d(TAG, "setUserDetails: Cache mis à jour. Items: ${itemCount}")
             notifyItemRangeChanged(0, itemCount)
@@ -79,7 +80,7 @@ class ChatAdapter(
         init {
             Log.d(TAG, "MessageViewHolder init pour item à la position (au moment de la création): $adapterPosition")
 
-            // Listener pour le clic sur le profil (avatar ou nom) - PRIS DE TON CODE
+            // Listener pour le clic sur le profil (avatar ou nom)
             val clickListener = View.OnClickListener { view ->
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
@@ -87,6 +88,7 @@ class ChatAdapter(
                     Log.d(TAG, "Listener de clic profil activé pour message: ${message.text}")
                     if (message.senderId != currentUserId && message.senderId.isNotBlank()) {
                         val userDetails = userDetailsMap[message.senderId]
+                        // Accessing username from User object
                         val usernameToPass = userDetails?.username?.takeIf { it.isNotEmpty() }
                             ?: message.senderUsername.takeIf { it.isNotEmpty() }
                             ?: itemView.context.getString(R.string.unknown_user)
@@ -119,20 +121,20 @@ class ChatAdapter(
         }
 
         fun bind(message: Message, viewType: Int, previousMessage: Message?) {
-            // Ta logique de bind est conservée ici
             binding.tvMessageText.text = message.text
-            val senderDetails = userDetailsMap[message.senderId]
+            val senderDetails = userDetailsMap[message.senderId] // Now retrieves a User object
             val showSenderDetails = shouldShowSenderDetails(message, previousMessage, viewType)
 
             if (viewType == VIEW_TYPE_RECEIVED) {
                 if (showSenderDetails) {
+                    // Accessing username from User object
                     binding.tvMessageSender.text = senderDetails?.username?.takeIf { it.isNotEmpty() }
                         ?: message.senderUsername.takeIf { it.isNotEmpty() }
                                 ?: itemView.context.getString(R.string.unknown_user)
                     binding.tvMessageSender.visibility = View.VISIBLE
                     binding.ivSenderAvatar.visibility = View.VISIBLE
                     Glide.with(itemView.context)
-                        .load(senderDetails?.profilePictureUrl)
+                        .load(senderDetails?.profilePictureUrl) // Using profilePictureUrl from User object
                         .apply(RequestOptions.circleCropTransform())
                         .placeholder(R.drawable.ic_profile_placeholder)
                         .error(R.drawable.ic_profile_placeholder)
@@ -150,8 +152,7 @@ class ChatAdapter(
                 val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
                 binding.tvMessageTimestamp.text = sdf.format(message.timestamp)
                 binding.tvMessageTimestamp.visibility = View.VISIBLE
-                binding.tvMessageTimestamp.setTextAppearance(R.style.ChatTimestamp) // Applique le style
-                // Applique la couleur spécifique pour le timestamp DANS la bulle
+                binding.tvMessageTimestamp.setTextAppearance(R.style.ChatTimestamp)
                 if (viewType == VIEW_TYPE_SENT) {
                     binding.tvMessageTimestamp.setTextColor(itemView.context.getColor(R.color.chat_text_sent_dark))
                 } else {
@@ -161,7 +162,6 @@ class ChatAdapter(
                 binding.tvMessageTimestamp.visibility = View.GONE
             }
 
-            // Ta logique de ConstraintSet pour l'alignement est conservée
             val constraintLayoutRoot = binding.root as ConstraintLayout
             val set = ConstraintSet()
             set.clone(constraintLayoutRoot)
@@ -177,7 +177,6 @@ class ChatAdapter(
             } else { // VIEW_TYPE_RECEIVED
                 binding.bubbleLayout.setBackgroundResource(R.drawable.bg_chat_bubble_received_dark)
                 binding.tvMessageText.setTextAppearance(R.style.ChatTextReceived)
-                // Ajustement pour la marge en fonction de la visibilité de l'avatar (GONE vs INVISIBLE/VISIBLE)
                 val marginStartForBubble = if (binding.ivSenderAvatar.visibility != View.GONE) chatBubbleMarginStartForReceived else 0
                 set.connect(binding.bubbleLayoutContainer.id, ConstraintSet.START, binding.ivSenderAvatar.id, ConstraintSet.END, marginStartForBubble)
                 set.connect(binding.bubbleLayoutContainer.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 0)

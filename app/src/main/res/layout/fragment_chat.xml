@@ -8,18 +8,18 @@
     android:background="@color/chat_background_dark">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_chat_messages"
+        android:id="@+id/recyclerView_chat"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/tv_typing_indicator"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-    android:clipToPadding="false"
-    android:paddingBottom="8dp"
-    tools:listitem="@layout/item_chat_message" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"
+        tools:listitem="@layout/item_chat_message" />
 
     <TextView
         android:id="@+id/tv_chat_empty_message"
@@ -44,20 +44,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- NOUVEAU: Indicateur "En train d'écrire..." -->
     <TextView
         android:id="@+id/tv_typing_indicator"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="4dp"
         android:textColor="@color/chat_input_hint_dark"
         android:textSize="12sp"
         android:visibility="gone"
-    app:layout_constraintBottom_toTopOf="@id/ll_chat_input_container"
-    app:layout_constraintStart_toStartOf="parent"
-    tools:text="Quelqu'un est en train d'écrire..."
-    tools:visibility="visible"/>
+        app:layout_constraintBottom_toTopOf="@id/ll_chat_input_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Quelqu'un est en train d'écrire..."
+        tools:visibility="visible"/>
 
     <LinearLayout
         android:id="@+id/ll_chat_input_container"
@@ -75,7 +76,7 @@
         android:gravity="center_vertical">
 
         <EditText
-            android:id="@+id/et_chat_message_input"
+            android:id="@+id/et_message_input"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -95,16 +96,16 @@
             tools:ignore="HardcodedText" />
 
         <ImageButton
-            android:id="@+id/btn_send_message"
+            android:id="@+id/btn_send"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="@drawable/bg_send_button_dark"
             android:src="@drawable/ic_paper_plane"
             app:tint="@color/chat_send_button_icon_dark"
             android:contentDescription="@string/send_message_button_description"
-        android:padding="12dp"
-        android:scaleType="centerInside"
-        android:elevation="1dp"/>
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:elevation="1dp"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
